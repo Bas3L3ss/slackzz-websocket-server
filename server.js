@@ -202,11 +202,9 @@ const io = new Server(server, {
   },
 });
 
-// Connect to Redis
-const redis = new Redis(); // This connects to Redis running on localhost by default
+const redis = new Redis();
 
-// Store user data in Redis instead of in-memory
-const disconnectTimers = new Map(); // To debounce disconnection events
+const disconnectTimers = new Map();
 
 app.get("/", (req, res) => {
   res.send("WebSocket server is running");
