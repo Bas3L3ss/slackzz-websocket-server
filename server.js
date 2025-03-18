@@ -1,3 +1,4 @@
+require("dotenv").config(); // Load .env variables
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -8,13 +9,16 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
-
+const BASE_URL = process.env.BASE_URL;
 // Connect to Redis
-const redis = new Redis();
+const redis = new Redis(process.env.REDIS_URL, {
+  tls: { rejectUnauthorized: false }, // Required for Upstash (if using TLS)
+});
+
 const disconnectTimers = new Map();
 
 app.get("/", (req, res) => {
@@ -44,11 +48,10 @@ io.on("connection", (socket) => {
       `[Register] User ${userData.userId} now has ${connectionsCount} connections`
     );
 
-    // Only update status to online if this is their first connection
     if (connectionsCount === 1) {
       try {
         await axios.post(
-          "http://localhost:3000/api/presence/update",
+          `${BASE_URL}/api/presence/update`,
           {
             userId: userData.userId,
             status: "online",
@@ -103,7 +106,7 @@ io.on("connection", (socket) => {
 
               try {
                 await axios.post(
-                  "http://localhost:3000/api/presence/update",
+                  `${BASE_URL}/api/presence/update`,
                   {
                     userId: userData.userId,
                     status: "offline",
